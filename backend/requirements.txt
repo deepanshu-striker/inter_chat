@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+python-multipart
+requests
+openai
+groq
+elevenlabs
+langchain
+langchain-groq
+langchain-community
+numpy
+pydub
