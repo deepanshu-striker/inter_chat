@@ -1,36 +1,90 @@
-# Real-time Audio Response Landing Page
+# Real-time Audio Response Service
 
-This project is a landing page for a service that provides real-time audio recording and responses.
+This project is a full-stack application that provides real-time audio recording, transcription, and AI-powered responses. It includes a landing page with pricing plans and a voice chat application.
 
 ## Features
 
-- **Headline:** Highlights lightning-speed real-time audio processing.
-- **Authentication (Placeholder):** Includes Login/Sign Up buttons. Google Authentication is planned for future integration.
-- **Pricing Tiers:**
+- **Real-time Audio Processing:** Record audio, get instant transcription, and receive AI responses.
+- **Google Authentication:** Secure user login and registration via Google Sign-In.
+- **Dynamic Waveform Visualization:** Visual feedback during audio recording.
+- **Subscription Management:**
     - Free: 50 responses
-    - Pro: ₹499 for 300 responses
-    - Business: ₹1599 for 2000 responses
-- **User Dashboard (Mocked):** Displays mock data for responses used and remaining.
-- **Subscription Management (Conceptual):** The page is structured to support subscription-based response quotas. Backend and payment integration are required to make this functional.
+    - Pro: ₹499 for 300 responses (monthly)
+    - Business: ₹1599 for 2000 responses (monthly)
+- **User Dashboard:** Displays real-time statistics for responses used and remaining.
+- **Plan Upgrade System:** Users can upgrade their plan when they need more responses.
+- **Business Rules Implementation:**
+    - Users can only upgrade plans, never downgrade
+    - Clear visual indicators for current plan and available upgrades
+    - Automatic response counting and quota enforcement
 
-## File Structure
+## Project Structure
 
-- `index.html`: The main HTML file for the landing page.
-- `css/style.css`: Contains all the styles for the page.
-- `js/script.js`: Includes basic JavaScript for mock interactions. This will be expanded for authentication, API calls, and dynamic content updates.
+### Frontend
+- `frontend/src/components/`: React components including VoiceChat and WaveformVisualizer
+- `frontend/src/components/landing/`: Landing page components (Header, Hero, Pricing, etc.)
+- `frontend/src/context/`: Context providers for state management
+- `frontend/src/firebase/`: Firebase configuration and authentication utilities
+- `frontend/src/pages/`: Page components for routing
+- `frontend/src/styles/`: CSS styles for components
 
-## Setup
+### Backend
+- `backend/main.py`: FastAPI server with endpoints for authentication, transcription, and chat
+- `backend/agent.py`: AI agent for processing chat requests
+- `backend/utils/`: Utility functions for audio processing and transcription
 
-1.  Clone the repository (if applicable) or download the files.
-2.  Open `index.html` in a web browser to view the page.
+## Setup and Installation
 
-## Future Development
+### Prerequisites
+- Node.js and npm
+- Python 3.11+
+- Docker and Docker Compose (for containerized deployment)
+- Firebase project with Google Authentication enabled
 
--   Integrate Google Authentication for Login/Sign Up.
--   Develop a backend system to:
-    -   Manage user accounts and authentication.
-    -   Track subscription status and response quotas.
-    -   Store user data securely.
--   Implement a payment gateway for handling subscriptions.
--   Connect the frontend to the backend via APIs to fetch user data and update response counts.
--   Build the core real-time audio processing functionality.
+### Environment Setup
+1. Clone the repository
+2. Create a `.env` file based on `.env.example` with your API keys
+3. Set up Firebase credentials for authentication
+
+### Development
+```bash
+# Install frontend dependencies
+cd frontend
+npm install
+
+# Install backend dependencies
+cd backend
+pip install -r requirements.txt
+
+# Run frontend development server
+cd frontend
+npm run dev
+
+# Run backend development server
+cd backend
+python main.py
+```
+
+### Production Deployment
+```bash
+# Build and run with Docker Compose
+docker-compose -f docker-compose.prod.yml up -d --build
+```
+
+## Current Status and Future Development
+
+### Completed
+- ✅ Google Authentication integration
+- ✅ Backend system for user management and response tracking
+- ✅ Real-time audio recording, transcription, and chat functionality
+- ✅ User dashboard with usage statistics
+- ✅ Subscription plan management with business rules
+- ✅ Dynamic waveform visualization
+
+### Planned Enhancements
+- Implement actual payment gateway integration for subscriptions
+- Add more AI model options for different response styles
+- Implement voice response using text-to-speech
+- Add user settings for customizing the experience
+- Create admin dashboard for monitoring usage and user statistics
+- Implement multi-language support
