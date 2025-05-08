@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Audio Response</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <h1>AudioRespond AI</h1>
+            </div>
+            <div class="auth-buttons">
+                <button id="loginBtn">Login</button>
+                <button id="signupBtn">Sign Up</button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="hero">
+            <div class="hero-content">
+                <h2>Experience Lightning-Fast Audio Interactions</h2>
+                <p>Our platform records your audio and responds in real-time, faster than you can imagine!</p>
+                <a href="#pricing" class="cta-button">Get Started</a>
+            </div>
+        </section>
+
+        <section id="user-dashboard" style="display: none;"> <!-- Hidden by default, shown after login -->
+            <h3>Your Usage</h3>
+            <p>Responses Used: <span id="responsesUsed">0</span></p>
+            <p>Responses Remaining: <span id="responsesRemaining">50</span> (Free Tier)</p>
+        </section>
+
+        <section id="pricing">
+            <h2>Pricing Plans</h2>
+            <div class="pricing-container">
+                <div class="pricing-tier">
+                    <h3>Free</h3>
+                    <p class="price">₹0</p>
+                    <ul>
+                        <li>50 Responses</li>
+                        <li>Real-time Processing</li>
+                        <li>Basic Support</li>
+                    </ul>
+                    <button class="select-plan-btn" data-plan="free">Start Free</button>
+                </div>
+                <div class="pricing-tier popular">
+                    <h3>Pro</h3>
+                    <p class="price">₹499 <span class="billing-cycle">/ month</span></p>
+                    <ul>
+                        <li>300 Responses</li>
+                        <li>Real-time Processing</li>
+                        <li>Priority Support</li>
+                        <li>Early access to new features</li>
+                    </ul>
+                    <button class="select-plan-btn" data-plan="pro">Choose Pro</button>
+                </div>
+                <div class="pricing-tier">
+                    <h3>Business</h3>
+                    <p class="price">₹1599 <span class="billing-cycle">/ month</span></p>
+                    <ul>
+                        <li>2000 Responses</li>
+                        <li>Real-time Processing</li>
+                        <li>Dedicated Support</li>
+                        <li>Advanced Analytics</li>
+                        <li>API Access</li>
+                    </ul>
+                    <button class="select-plan-btn" data-plan="business">Choose Business</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 AudioRespond AI. All rights reserved.</p>
+    </footer>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

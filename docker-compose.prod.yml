@@ -9,11 +9,20 @@ services:
     ports:
       - "8000:8000"
     restart: always
+    volumes:
+      # This volume maps the service account key for the backend.
+      # Ensure GOOGLE_APPLICATION_CREDENTIALS in .env points to /app/credentials/serviceAccountKey.json
+      - ./interchat-27029-firebase-adminsdk-fbsvc-444e56fd92.json:/app/credentials/serviceAccountKey.json
 
   frontend:
     build:
-      context: ./frontend
+      context: ./frontend # Uses frontend/Dockerfile
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3000:3000" # Assumes frontend/Dockerfile's CMD serves on port 3000
     restart: always
+    depends_on:
+      - backend
+    # If your frontend needs environment variables from .env, uncomment below
+    # env_file:
+    #  - .env
