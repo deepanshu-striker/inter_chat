@@ -1,6 +1,8 @@
 // frontend/src/components/VoiceChat.jsx
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useAuth } from '../context/AuthContext'
+import WaveformVisualizer from './WaveformVisualizer'
 
 // Dev -> call localhost:8000, Prod -> same origin
 const apiBase = import.meta.env.DEV 
@@ -12,6 +14,7 @@ const SILENCE_THRESHOLD = 0.01   // adjust RMS threshold
 const SILENCE_DURATION = 4.0     // seconds of silence to auto-stop
 
 export default function VoiceChat() {
+  const { currentUser, refreshUserData } = useAuth(); // Get the current user and refresh function from auth context
   const [listening, setListening] = useState(false)
   const [status, setStatus] = useState('idle')       // 'idle' | 'recording' | 'transcribing' | 'chatting'
   const [transcript, setTranscript] = useState('')
@@ -108,9 +111,35 @@ export default function VoiceChat() {
     const blob = new Blob(audioChunks.current, { type: 'audio/wav' })
     const form = new FormData(); form.append('file', blob, 'voice.wav')
 
+    // Check if user is authenticated
+    if (!currentUser) {
+      setError('You must be logged in to use this feature')
+      setStatus('idle')
+      return
+    }
+    
+    // Log the complete user object to debug
+    console.log('[VoiceChat] Current user object:', currentUser);
+
     try {
-      console.log('[VoiceChat] POST', `${apiBase}/transcribe`)
-      const tRes = await fetch(`${apiBase}/transcribe`, { method: 'POST', body: form })
+      console.log('[VoiceChat] POST', `${apiBase}/transcribe`, 'User ID:', currentUser.uid)
+      // We need to use the Firebase UID (google_id) as that's what the backend uses to identify users
+      // The backend expects the same ID that was used during registration
+      console.log('[VoiceChat] Current user object for debugging:', currentUser);
+      
+      // Always use the Firebase UID (uid) as that's what was used during registration
+      const userId = currentUser.uid;
+      console.log('[VoiceChat] Using Firebase UID for transcribe:', userId);
+      
+      // Only send one header to avoid concatenation issues
+      const headers = new Headers();
+      headers.append('user-id', userId); // This is the primary header name expected by FastAPI
+      
+      const tRes = await fetch(`${apiBase}/transcribe`, { 
+        method: 'POST', 
+        headers: headers,
+        body: form 
+      })
       if (!tRes.ok) throw new Error(`Transcription failed: ${tRes.status}`)
       const { transcript: txt } = await tRes.json()
       console.log('[VoiceChat] transcript:', txt)
@@ -118,15 +147,35 @@ export default function VoiceChat() {
 
       setStatus('chatting')
       console.log('[VoiceChat] POST', `${apiBase}/chat`)
+      // Use the same user ID as for transcribe
       const cRes = await fetch(`${apiBase}/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: txt }),
+        headers: { 
+          'Content-Type': 'application/json'
+          // No need for user-id header here as it's in the body
+        },
+        body: JSON.stringify({ 
+          user_id: userId, // Use the same userId variable we defined above
+          message: txt 
+        }),
       })
       if (!cRes.ok) throw new Error(`Chat failed: ${cRes.status}`)
-      const { reply: bot } = await cRes.json()
-      console.log('[VoiceChat] reply:', bot)
-      setReply(bot)
+      const responseData = await cRes.json()
+      console.log('[VoiceChat] response data:', responseData)
+      
+      // Use the 'response' field from the backend
+      const botReply = responseData.response
+      console.log('[VoiceChat] bot reply:', botReply)
+      
+      // Also log the remaining responses for debugging
+      console.log('[VoiceChat] responses remaining:', responseData.responses_remaining)
+      
+      setReply(botReply)
+
+      // Refresh user data after a successful chat response to update counts everywhere
+      refreshUserData()
+        .then(() => console.log('[VoiceChat] User data refreshed after chat'))
+        .catch(err => console.error('[VoiceChat] Failed to refresh user data after chat:', err));
 
       setStatus('idle')
       // continue listening automatically
@@ -145,7 +194,7 @@ export default function VoiceChat() {
   }, [listening])
 
   return (
-    <div className="space-y-4">
+    <div className="max-w-3xl mx-auto space-y-6">
       <AnimatePresence>
         {error && (
           <motion.div
@@ -162,7 +211,7 @@ export default function VoiceChat() {
       <motion.button
         onClick={() => (listening ? stopListening() : startListening())}
         className={
-          `w-full py-2 text-white rounded-lg transition-transform transform ` +
+          `w-full py-3 text-white rounded-lg transition-transform transform text-lg font-medium ` +
           (listening
             ? 'bg-red-600 hover:bg-red-700 active:scale-95'
             : 'bg-blue-600 hover:bg-blue-700 active:scale-95')
@@ -171,19 +220,51 @@ export default function VoiceChat() {
       >
         {listening ? 'Stop Listening' : 'Start Listening'}
       </motion.button>
+      
+      {/* Waveform Visualizer */}
+      <WaveformVisualizer 
+        isActive={status === 'recording'} 
+        audioSource={source.current}
+      />
 
-      <div>
-        <h2 className="font-medium">You:</h2>
-        <p className="p-2 bg-gray-100 rounded min-h-[2rem]">
-          {status === 'transcribing' ? 'Transcribing…' : transcript || '—'}
-        </p>
+      <div className="bg-white shadow-md rounded-lg overflow-hidden">
+        <div className="p-4 bg-gray-50 border-b">
+          <h2 className="font-medium text-gray-700">You:</h2>
+        </div>
+        <div className="p-4 min-h-[4rem]">
+          {status === 'transcribing' ? (
+            <div className="flex items-center space-x-2">
+              <div className="animate-pulse text-gray-500">Transcribing</div>
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200"></div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-800 whitespace-pre-wrap">{transcript || '—'}</p>
+          )}
+        </div>
       </div>
 
-      <div>
-        <h2 className="font-medium">Bot:</h2>
-        <p className="p-2 bg-blue-50 rounded min-h-[2rem]">
-          {status === 'chatting' ? 'Thinking…' : reply || '—'}
-        </p>
+      <div className="bg-white shadow-md rounded-lg overflow-hidden">
+        <div className="p-4 bg-blue-50 border-b">
+          <h2 className="font-medium text-blue-700">Bot:</h2>
+        </div>
+        <div className="p-4 min-h-[4rem]">
+          {status === 'chatting' ? (
+            <div className="flex items-center space-x-2">
+              <div className="animate-pulse text-gray-500">Thinking</div>
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-100"></div>
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-200"></div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-800 whitespace-pre-wrap">{reply || '—'}</p>
+          )}
+        </div>
       </div>
     </div>
   )

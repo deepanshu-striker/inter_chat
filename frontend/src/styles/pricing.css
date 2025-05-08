@@ -1,0 +1,30 @@
+/* Pricing section styles */
+
+.current-plan {
+  position: relative;
+  border: 2px solid #28a745;
+  box-shadow: 0 0 15px rgba(40, 167, 69, 0.2);
+}
+
+.current-plan-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #28a745;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 5px 10px;
+  border-bottom-left-radius: 8px;
+  transform: translateY(-1px) translateX(1px);
+}
+
+.pricing-tier.disabled {
+  opacity: 0.7;
+}
+
+.select-plan-btn.disabled {
+  background-color: #cccccc !important;
+  color: #666666 !important;
+  cursor: not-allowed !important;
+}
