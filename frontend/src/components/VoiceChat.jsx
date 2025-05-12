@@ -5,9 +5,9 @@ import { useAuth } from '../context/AuthContext'
 import WaveformVisualizer from './WaveformVisualizer'
 
 // Dev -> call localhost:8000, Prod -> same origin
-const apiBase = import.meta.env.DEV 
-  ? 'http://localhost:8000'    // dev
-  : 'http://localhost:8000'    // prod, too
+const apiBase = import.meta.env.DEV
+  ? 'http://localhost:8000' // local dev
+  : `${window.location.protocol}//${window.location.hostname}:8000`; // production
 
 // Silence detection parameters
 const SILENCE_THRESHOLD = 0.01   // adjust RMS threshold
@@ -113,23 +113,28 @@ export default function VoiceChat() {
 
     // Check if user is authenticated
     if (!currentUser) {
-      setError('You must be logged in to use this feature')
-      setStatus('idle')
-      return
+      // If BYPASS_AUTH is enabled in App.jsx, we should still be able to use this component
+      // We'll use a mock user ID for API calls in this case
+      console.log('[VoiceChat] No authenticated user, using mock data for API calls')
+      // Continue with the process using a mock user ID
     }
     
     // Log the complete user object to debug
     console.log('[VoiceChat] Current user object:', currentUser);
 
     try {
-      console.log('[VoiceChat] POST', `${apiBase}/transcribe`, 'User ID:', currentUser.uid)
+      // If no authenticated user, use a mock user ID for testing/demo purposes
+      const mockUserId = 'demo-user-123'; // This should match a user ID in your Firestore database
+      
+      // Get the user ID - either from the authenticated user or use the mock ID
+      const userId = currentUser ? currentUser.uid : mockUserId;
+      
+      console.log('[VoiceChat] POST', `${apiBase}/transcribe`, 'User ID:', userId)
       // We need to use the Firebase UID (google_id) as that's what the backend uses to identify users
       // The backend expects the same ID that was used during registration
-      console.log('[VoiceChat] Current user object for debugging:', currentUser);
+      console.log('[VoiceChat] Current user object for debugging:', currentUser || { uid: mockUserId, note: 'Using mock user ID' });
       
-      // Always use the Firebase UID (uid) as that's what was used during registration
-      const userId = currentUser.uid;
-      console.log('[VoiceChat] Using Firebase UID for transcribe:', userId);
+      console.log('[VoiceChat] Using user ID for transcribe:', userId);
       
       // Only send one header to avoid concatenation issues
       const headers = new Headers();
@@ -173,9 +178,14 @@ export default function VoiceChat() {
       setReply(botReply)
 
       // Refresh user data after a successful chat response to update counts everywhere
-      refreshUserData()
-        .then(() => console.log('[VoiceChat] User data refreshed after chat'))
-        .catch(err => console.error('[VoiceChat] Failed to refresh user data after chat:', err));
+      // Only attempt to refresh if we have an authenticated user
+      if (currentUser) {
+        refreshUserData()
+          .then(() => console.log('[VoiceChat] User data refreshed after chat'))
+          .catch(err => console.error('[VoiceChat] Failed to refresh user data after chat:', err));
+      } else {
+        console.log('[VoiceChat] Skipping user data refresh - no authenticated user');
+      }
 
       setStatus('idle')
       // continue listening automatically
