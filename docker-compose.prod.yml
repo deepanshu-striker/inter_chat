@@ -6,42 +6,18 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
+    ports:
+      - "8000:8000"
+    restart: always
     volumes:
       - ./interchat-27029-firebase-adminsdk-fbsvc-444e56fd92.json:/app/credentials/serviceAccountKey.json
-    expose:
-      - "8000"  # Only expose internally to Caddy
-    networks:
-      - web
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    expose:
-      - "3000"  # Only expose internally to Caddy
-    depends_on:
-      - backend
-    networks:
-      - web
-
-  caddy:
-    image: caddy:2
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
     ports:
-      - "80:80"
-      - "443:443"
+      - "3000:3000"
+    restart: always
     depends_on:
-      - frontend
       - backend
-    networks:
-      - web
-
-networks:
-  web:
-
-volumes:
-  caddy_data:
-  caddy_config:
